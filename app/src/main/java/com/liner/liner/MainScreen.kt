@@ -10,7 +10,6 @@ import androidx.compose.material3.Card
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
@@ -23,6 +22,7 @@ val TAG = "MainScreen"
 
 @Composable
 fun MainScreen() {
+
     val a = painterResource(id = R.drawable.pichu)
     val b = painterResource(id = R.drawable.dummy_image)
     val list = remember {
@@ -38,9 +38,9 @@ fun MainScreen() {
                 modifier = Modifier
                     .align(Alignment.Center)
                     .swipeAway({}, {}, {}, {
-                        list.value = list.value.drop(1).toMutableList()
-                        Log.d(TAG, "MainScreen: right")
-                        Log.d(TAG, "MainScreen: $list")
+                        list.value = list.value
+                            .drop(1)
+                            .toMutableList()
                     }), list.value[index]
             )
         }
