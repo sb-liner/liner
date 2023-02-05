@@ -1,7 +1,9 @@
-package com.liner.liner
+package com.liner.liner.screen
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Fireplace
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -18,7 +20,7 @@ import com.liner.liner.navigation.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BaseScreen(){
+fun BaseScreen() {
     val navController = rememberNavController()
 
     val items = listOf(
@@ -30,15 +32,27 @@ fun BaseScreen(){
     )
 
     Scaffold(
+        topBar = {
+            TopAppBar(elevation = 0.dp, backgroundColor = MaterialTheme.colors.background) {
+                Icon(
+                    Icons.Default.Fireplace,
+                    contentDescription = "AppIcon",
+                    tint = MaterialTheme.colors.primary
+                )
+                Text(text = "liner", color = MaterialTheme.colors.primary)
+            }
+        },
         bottomBar = {
-            BottomNavigation (
+            BottomNavigation(
                 backgroundColor = Color.White,
                 elevation = 0.dp,
                 modifier = Modifier.height(80.dp)
-                    ){
-                Row(modifier = Modifier.fillMaxSize(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center) {
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
 
                     val navBackStackEntry by navController.currentBackStackEntryAsState()
                     val currentDestination = navBackStackEntry?.destination
@@ -65,6 +79,6 @@ fun BaseScreen(){
             }
         }
     ) { innerPadding ->
-        MyAppNavHost(modifier = Modifier.padding(innerPadding),navController)
+        MyAppNavHost(modifier = Modifier.padding(innerPadding), navController)
     }
 }

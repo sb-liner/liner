@@ -1,7 +1,9 @@
 package com.liner.liner
 
+import android.util.Log
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.calculateTargetValue
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.splineBasedDecay
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -17,6 +19,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.input.pointer.util.VelocityTracker
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 
@@ -73,17 +76,20 @@ fun Modifier.swipeAway(
                     val velocityY = velocityTracker.calculateVelocity().y
                     val targetOffsetX = decay.calculateTargetValue(offsetX.value, velocityX)
                     val targetOffsetY = decay.calculateTargetValue(offsetX.value, velocityY)
-                    if (velocityX > velocityY && targetOffsetX.absoluteValue > size.width) {
-                        launch { offsetX.animateTo(targetOffsetX) }
-                        launch { offsetY.animateTo(targetOffsetY) }
+                    Log.d("TAG", "swipeAway: vx $velocityX vy $velocityY tx $targetOffsetX ty $targetOffsetY")
+                    if (velocityX.absoluteValue > velocityY.absoluteValue && targetOffsetX.absoluteValue > size.width) {
+                        val animation1 = launch { offsetX.animateTo(targetOffsetX, tween()) }
+                        val animation2 = launch { offsetY.animateTo(targetOffsetY, tween()) }
+                        joinAll(animation1, animation2)
                         if (targetOffsetX > 0) {
                             swipeRight()
                         } else {
                             swipeLeft()
                         }
-                    } else if (velocityX < velocityY && targetOffsetY.absoluteValue > size.height) {
-                        launch { offsetX.animateTo(targetOffsetX) }
-                        launch { offsetY.animateTo(targetOffsetY) }
+                    } else if (velocityX.absoluteValue < velocityY.absoluteValue && targetOffsetY.absoluteValue > size.height) {
+                        val animation1 = launch { offsetX.animateTo(targetOffsetX, tween()) }
+                        val animation2 = launch { offsetY.animateTo(targetOffsetY, tween()) }
+                        joinAll(animation1, animation2)
                         if (targetOffsetY > 0) {
                             swipeUp()
                         } else {
