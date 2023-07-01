@@ -1,6 +1,8 @@
 package com.liner.liner.screen.mainscreen
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -9,12 +11,16 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -34,7 +40,8 @@ fun MainScreen(
     when (viewModel.state.value) {
         is MainScreenState.Loading -> LoadingScreen()
         is MainScreenState.Loaded -> CardStack(
-            viewModel.userList.toList(),
+            (viewModel.state.value as MainScreenState.Loaded).firstCardUser,
+            (viewModel.state.value as MainScreenState.Loaded).secondCardUser,
             viewModel::nope,
             viewModel::like
         )
@@ -53,29 +60,53 @@ private fun LoadingScreen() {
 }
 
 @Composable
-private fun CardStack(list: List<User>, swipeLeft: () -> Unit, swipeRight: () -> Unit) {
+private fun CardStack(
+    frontCard: User?,
+    backCard: User?,
+    swipeLeft: () -> Unit,
+    swipeRight: () -> Unit
+) {
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 5.dp, vertical = 5.dp)
+            .background(Color.White)
     ) {
-        for (user in list.asReversed()) {
+
+        backCard?.let {
             UserProfileCard(
                 modifier = Modifier
                     .align(Alignment.Center)
-                    .swipeAway({}, {}, { swipeLeft.invoke() }, {
-                        swipeRight.invoke()
-                    }), user
+                    .padding(5.dp),
+                user = backCard
             )
         }
-        ControlButtonPanel(modifier = Modifier.align(Alignment.BottomCenter))
+        frontCard?.let {
+            UserProfileCard(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .swipeAway({}, {}, { swipeLeft.invoke() }, { swipeRight.invoke() },{})
+                    .pointerInput(Unit){
+
+                    }
+                    .padding(5.dp),
+                user = frontCard
+            )
+        }
+        ControlButtonPanel(modifier = Modifier.align(Alignment.BottomCenter), swipeLeft)
     }
 }
 
 @Composable
-fun ControlButtonPanel(modifier: Modifier = Modifier) {
+fun ControlButtonPanel(modifier: Modifier = Modifier, onCloseButton: () -> Unit) {
     Row(modifier = modifier) {
-        Icon(Icons.Default.Close, contentDescription = "fav")
+        Icon(
+            Icons.Default.Close,
+            contentDescription = "fav",
+            modifier = Modifier
+                .width(50.dp)
+                .height(50.dp)
+                .clickable { onCloseButton.invoke() })
         Icon(Icons.Filled.Cancel, contentDescription = "fav")
         Icon(Icons.Filled.Star, contentDescription = "fav")
         Icon(Icons.Filled.Favorite, contentDescription = "fav")
@@ -86,7 +117,7 @@ fun ControlButtonPanel(modifier: Modifier = Modifier) {
 @Composable
 fun UserProfileCard(modifier: Modifier = Modifier, user: User) {
 
-    Card(modifier = modifier) {
+    Card(modifier = modifier.offset()) {
         Box {
             Image(
                 painter = painterResource(id = user.picture), contentDescription = "Profile Image",

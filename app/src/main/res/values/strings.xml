@@ -2,4 +2,5 @@
     <string name="app_name">liner</string>
     <string name="main">탐색</string>
     <string name="login">로그인</string>
+    <string name="mbti">MBTI</string>
 </resources>

@@ -27,7 +27,8 @@ fun Modifier.swipeAway(
     swipeUp: () -> Unit,
     swipeDown: () -> Unit,
     swipeLeft: () -> Unit,
-    swipeRight: () -> Unit
+    swipeRight: () -> Unit,
+    onGlide:()->Unit
 ): Modifier = composed {
 
     val offsetX = remember { Animatable(0f) }
@@ -76,16 +77,23 @@ fun Modifier.swipeAway(
                     val velocityY = velocityTracker.calculateVelocity().y
                     val targetOffsetX = decay.calculateTargetValue(offsetX.value, velocityX)
                     val targetOffsetY = decay.calculateTargetValue(offsetX.value, velocityY)
-                    Log.d("TAG", "swipeAway: vx $velocityX vy $velocityY tx $targetOffsetX ty $targetOffsetY")
+                    Log.d(
+                        "TAG",
+                        "swipeAway: vx $velocityX vy $velocityY tx $targetOffsetX ty $targetOffsetY"
+                    )
                     if (velocityX.absoluteValue > velocityY.absoluteValue && targetOffsetX.absoluteValue > size.width) {
                         val animation1 = launch { offsetX.animateTo(targetOffsetX, tween()) }
                         val animation2 = launch { offsetY.animateTo(targetOffsetY, tween()) }
                         joinAll(animation1, animation2)
-                        if (targetOffsetX > 0) {
-                            swipeRight()
+                        val job = if (targetOffsetX > 0) {
+                            launch { swipeRight() }
                         } else {
-                            swipeLeft()
+                            launch { swipeLeft() }
                         }
+                        job.join()
+                        launch { offsetX.snapTo(0f) }
+                        launch { offsetY.snapTo(0f) }
+                        launch { rotation.snapTo(0f) }
                     } else if (velocityX.absoluteValue < velocityY.absoluteValue && targetOffsetY.absoluteValue > size.height) {
                         val animation1 = launch { offsetX.animateTo(targetOffsetX, tween()) }
                         val animation2 = launch { offsetY.animateTo(targetOffsetY, tween()) }
