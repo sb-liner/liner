@@ -7,7 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 private val LinerTheme = lightColors(
-    primary = Color.Magenta,
+    primary = Color(0xFF0064FF),
     primaryVariant = Color.Magenta,
     secondary = Color.Magenta,
     background = Color.White

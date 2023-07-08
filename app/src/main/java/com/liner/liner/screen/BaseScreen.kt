@@ -11,6 +11,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -24,61 +25,91 @@ fun BaseScreen() {
     val navController = rememberNavController()
 
     val items = listOf(
+        Screen.ChatFind,
         Screen.Main,
         Screen.Login,
-        Screen.Login,
-        Screen.Login,
-        Screen.Login,
+        Screen.Mbti,
     )
 
-    Scaffold(
-        topBar = {
-            TopAppBar(elevation = 0.dp, backgroundColor = MaterialTheme.colors.background) {
-                Icon(
-                    Icons.Default.Fireplace,
-                    contentDescription = "AppIcon",
-                    tint = MaterialTheme.colors.primary
-                )
-                Text(text = "liner", color = MaterialTheme.colors.primary)
-            }
-        },
-        bottomBar = {
-            BottomNavigation(
-                backgroundColor = Color.White,
-                elevation = 0.dp,
-                modifier = Modifier.height(80.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
+    Box(
+        modifier = Modifier
+            .windowInsetsPadding(WindowInsets.statusBars)
+            .windowInsetsPadding(WindowInsets.navigationBars)
+    ) {
+        Scaffold(
+            topBar = {
+                TopAppBar(elevation = 0.dp, backgroundColor = MaterialTheme.colors.background) {
+                    Icon(
+                        Icons.Default.Fireplace,
+                        contentDescription = "AppIcon",
+                        tint = MaterialTheme.colors.primary
+                    )
+                    Text(text = "liner", color = MaterialTheme.colors.primary)
+                }
+            },
+            bottomBar = {
+                BottomNavigation(
+                    backgroundColor = Color.White,
+                    elevation = 8.dp,
+                    modifier = Modifier.height(55.dp)
                 ) {
+                    Row(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
 
-                    val navBackStackEntry by navController.currentBackStackEntryAsState()
-                    val currentDestination = navBackStackEntry?.destination
-                    items.forEach { screen ->
-                        IconButton(onClick = {
-                            navController.navigate(screen.route) {
-                                // Pop up to the start destination of the graph to
-                                // avoid building up a large stack of destinations
-                                // on the back stack as users select items
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
-                                // Avoid multiple copies of the same destination when
-                                // reselecting the same item
-                                launchSingleTop = true
-                                // Restore state when reselecting a previously selected item
-                                restoreState = true
-                            }
-                        }) {
-                            Icon(screen.icon, contentDescription = "content description")
+                        val navBackStackEntry by navController.currentBackStackEntryAsState()
+                        val currentDestination = navBackStackEntry?.destination?.route
+                        items.forEach { screen ->
+                            BottomNavigationItem(
+                                onClick = {
+                                    navController.navigate(screen.route) {
+                                        // Pop up to the start destination of the graph to
+                                        // avoid building up a large stack of destinations
+                                        // on the back stack as users select items
+                                        popUpTo(navController.graph.findStartDestination().id) {
+                                            saveState = true
+                                        }
+                                        // Avoid multiple copies of the same destination when
+                                        // reselecting the same item
+                                        launchSingleTop = true
+                                        // Restore state when reselecting a previously selected item
+                                        restoreState = true
+                                    }
+                                },
+                                icon = {
+                                    Icon(
+                                        screen.icon,
+                                        contentDescription = "content description"
+                                    )
+                                },
+                                selected = currentDestination == screen.route,
+                                selectedContentColor = MaterialTheme.colors.primary,
+                                unselectedContentColor = Color.Gray,
+                            )
                         }
                     }
                 }
             }
+        ) { innerPadding ->
+            var bottomPadding = 0.dp
+            bottomPadding =
+                if (WindowInsets.ime.asPaddingValues()
+                        .calculateBottomPadding() > innerPadding.calculateBottomPadding()
+                ) {
+                    0.dp
+                } else {
+                    innerPadding.calculateBottomPadding()
+                }
+            MyAppNavHost(
+                modifier = Modifier.padding(
+                    top = innerPadding.calculateTopPadding(),
+                    start = innerPadding.calculateStartPadding(LayoutDirection.Ltr),
+                    end = innerPadding.calculateEndPadding(LayoutDirection.Ltr),
+                    bottom = bottomPadding
+                ), navController
+            )
         }
-    ) { innerPadding ->
-        MyAppNavHost(modifier = Modifier.padding(innerPadding), navController)
     }
 }

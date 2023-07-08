@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package org.liner.chat.grpc;
+option java_package = "org.liner.chat.grpc";
+option java_multiple_files = true;
+
+import "google/protobuf/empty.proto";
+
+message ChatRequest {
+  string id = 1;
+  string name = 2;
+  string password = 3;
+}
+
+message ChatResponse {
+  string id = 1;
+}
+
+service ChatService {
+  rpc helloChatService (ChatRequest) returns (ChatResponse) {}
+  rpc getMatchedUserId (ChatRequest) returns (ChatResponse) {}
+}

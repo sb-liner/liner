@@ -15,6 +15,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.input.pointer.util.VelocityTracker
@@ -23,11 +24,14 @@ import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 
+private const val TAG = "SwipeAwayCard"
+
 fun Modifier.swipeAway(
     swipeUp: () -> Unit,
     swipeDown: () -> Unit,
     swipeLeft: () -> Unit,
-    swipeRight: () -> Unit
+    swipeRight: () -> Unit,
+    onGlide:()->Unit
 ): Modifier = composed {
 
     val offsetX = remember { Animatable(0f) }
@@ -49,13 +53,20 @@ fun Modifier.swipeAway(
             val decay = splineBasedDecay<Float>(this)
             coroutineScope {
                 while (true) {
-                    val pointerId = awaitPointerEventScope { awaitFirstDown().id }
-                    offsetX.stop()
-                    offsetY.stop()
-                    rotation.stop()
                     val velocityTracker = VelocityTracker()
                     awaitPointerEventScope {
+                        val pointerId = awaitFirstDown(
+                            requireUnconsumed = true,
+                            pass = PointerEventPass.Main
+                        ).id
+
+                        Log.d(TAG, "swipeAway: $pointerId")
+                        launch { offsetX.stop() }
+                        launch { offsetY.stop() }
+                        launch{ rotation.stop() }
+
                         drag(pointerId) { change ->
+                            Log.d(TAG, "swipeAway: $change")
                             val xOffset = offsetX.value + change.positionChange().x
                             val yOffset = offsetY.value + change.positionChange().y
                             launch {
@@ -76,16 +87,23 @@ fun Modifier.swipeAway(
                     val velocityY = velocityTracker.calculateVelocity().y
                     val targetOffsetX = decay.calculateTargetValue(offsetX.value, velocityX)
                     val targetOffsetY = decay.calculateTargetValue(offsetX.value, velocityY)
-                    Log.d("TAG", "swipeAway: vx $velocityX vy $velocityY tx $targetOffsetX ty $targetOffsetY")
+                    Log.d(
+                        "TAG",
+                        "swipeAway: vx $velocityX vy $velocityY tx $targetOffsetX ty $targetOffsetY"
+                    )
                     if (velocityX.absoluteValue > velocityY.absoluteValue && targetOffsetX.absoluteValue > size.width) {
                         val animation1 = launch { offsetX.animateTo(targetOffsetX, tween()) }
                         val animation2 = launch { offsetY.animateTo(targetOffsetY, tween()) }
                         joinAll(animation1, animation2)
-                        if (targetOffsetX > 0) {
-                            swipeRight()
+                        val job = if (targetOffsetX > 0) {
+                            launch { swipeRight() }
                         } else {
-                            swipeLeft()
+                            launch { swipeLeft() }
                         }
+                        job.join()
+                        launch { offsetX.snapTo(0f) }
+                        launch { offsetY.snapTo(0f) }
+                        launch { rotation.snapTo(0f) }
                     } else if (velocityX.absoluteValue < velocityY.absoluteValue && targetOffsetY.absoluteValue > size.height) {
                         val animation1 = launch { offsetX.animateTo(targetOffsetX, tween()) }
                         val animation2 = launch { offsetY.animateTo(targetOffsetY, tween()) }
@@ -109,3 +127,4 @@ fun Modifier.swipeAway(
             rotationZ = rotation.value
         )
 }
+
