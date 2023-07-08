@@ -1,8 +1,11 @@
+import com.google.protobuf.*
+
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
     id 'com.google.dagger.hilt.android'
     id 'kotlin-kapt'
+    id 'com.google.protobuf'
 }
 
 android {
@@ -102,7 +105,63 @@ dependencies {
     implementation "com.google.dagger:hilt-android:2.44"
     kapt "com.google.dagger:hilt-compiler:2.44"
     implementation 'androidx.hilt:hilt-navigation-compose:1.0.0'
+
+    runtimeOnly "io.grpc:grpc-okhttp:$grpcVersion"
+    implementation "io.grpc:grpc-api:$grpcVersion"
+    implementation "io.grpc:protoc-gen-grpc-kotlin:$grpcKotlinVersion"
+    implementation "io.grpc:grpc-kotlin-stub:$grpcKotlinVersion"
+    implementation "io.grpc:grpc-stub:$grpcVersion"
+    implementation "io.grpc:grpc-protobuf-lite:$grpcVersion"
+    implementation "io.grpc:grpc-kotlin-stub:$grpcKotlinVersion"
+    implementation "com.google.protobuf:protobuf-kotlin-lite:$protobufVersion"
+
 }
 kapt {
     correctErrorTypes true
+}
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:$protobufVersion"
+    }
+
+    plugins {
+        java {
+            artifact = "io.grpc:protoc-gen-grpc-java:$grpcVersion"
+        }
+
+        grpc {
+            artifact = "io.grpc:protoc-gen-grpc-java:$grpcVersion"
+        }
+
+        grpckt {
+            artifact = "io.grpc:protoc-gen-grpc-kotlin:$grpcKotlinVersion:jdk8@jar"
+        }
+    }
+
+    generateProtoTasks {
+        all().each { task ->
+            task.plugins {
+                java {
+                    option 'lite'
+                }
+
+                grpc {
+                    option 'lite'
+                }
+
+                grpckt {
+                    option 'lite'
+                }
+            }
+            task.builtins {
+                kotlin {
+                    option 'lite'
+                }
+            }
+        }
+    }
+}
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
 }

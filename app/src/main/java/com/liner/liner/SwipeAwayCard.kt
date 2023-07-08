@@ -15,6 +15,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.input.pointer.util.VelocityTracker
@@ -22,6 +23,8 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
+
+private const val TAG = "SwipeAwayCard"
 
 fun Modifier.swipeAway(
     swipeUp: () -> Unit,
@@ -50,13 +53,20 @@ fun Modifier.swipeAway(
             val decay = splineBasedDecay<Float>(this)
             coroutineScope {
                 while (true) {
-                    val pointerId = awaitPointerEventScope { awaitFirstDown().id }
-                    offsetX.stop()
-                    offsetY.stop()
-                    rotation.stop()
                     val velocityTracker = VelocityTracker()
                     awaitPointerEventScope {
+                        val pointerId = awaitFirstDown(
+                            requireUnconsumed = true,
+                            pass = PointerEventPass.Main
+                        ).id
+
+                        Log.d(TAG, "swipeAway: $pointerId")
+                        launch { offsetX.stop() }
+                        launch { offsetY.stop() }
+                        launch{ rotation.stop() }
+
                         drag(pointerId) { change ->
+                            Log.d(TAG, "swipeAway: $change")
                             val xOffset = offsetX.value + change.positionChange().x
                             val yOffset = offsetY.value + change.positionChange().y
                             launch {
@@ -117,3 +127,4 @@ fun Modifier.swipeAway(
             rotationZ = rotation.value
         )
 }
+
